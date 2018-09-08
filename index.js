@@ -3,21 +3,39 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const path = require('path');
+const cors = require('cors');
 app.use(express.static(path.join(__dirname, '/public')));
+app.use(cors());
 
-io.on('connection', (client) => {
-  let counter = 0;
-  let counter2 = 0;
 
-  client.on('move:member', (details) => {
-    console.log("move:member server", details);
-    io.sockets.emit('move:member', details);
+io.on('connection', (socket) => {
+  socket.on('newbooking:customer', (activeBook) => {
+    console.log(`A new booking! ${Math.random(5)}`, JSON.stringify(activeBook, undefined, 2));
+    io.sockets.emit('newbooking:customer', activeBook);
   });
 
-  client.on('move:driver', (details) => {
-    console.log("move:driver server", details);
-    io.sockets.emit('move:driver', details);
+  socket.on('newbooking:membercancellation', (activeBook) => {
+    console.log("canceled");
+    io.sockets.emit('newbooking:membercancellation', activeBook);
   });
+
+  socket.on('newbooking:drivercancellation', (activeBook) => {
+    io.sockets.emit('newbooking:drivercancellation', activeBook)
+  })
+
+  socket.on('newbooking:accepted', (activeBook) => {
+    io.sockets.emit('newbooking:accepted', activeBook)
+  })
+
+  socket.on('newbooking:pickedup', (activeBook) => {
+    console.log("From driver: pickedup");
+    io.sockets.emit('newbooking:pickedup', activeBook)
+  })
+
+  socket.on('newbooking:arrived', (activeBook) => {
+    console.log("From driver: Customer arrived safely!");
+    io.sockets.emit('newbooking:arrived', activeBook);
+  })
 });
 
 app.get('/', (req, res, next) => {  
